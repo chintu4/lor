@@ -22,56 +22,73 @@ function App() {
     const connectWallet = async () => {
       // Prevent multiple simultaneous connection attempts
       if (isConnecting || hasTriedConnection) {
-        console.log("Connection already in progress or completed");
+        console.log("[DEBUG] Connection already in progress or completed. isConnecting:", isConnecting, "hasTriedConnection:", hasTriedConnection);
         return;
       }
 
+      console.log("[DEBUG] Starting wallet/contract connection attempt...");
+      console.log("[DEBUG] Current state before connection:", state);
       setIsConnecting(true);
       setHasTriedConnection(true);
 
-      const contractAddress = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"; // Replace with your actual deployed contract address
+      const contractAddress = "0xC7Ef55966fa060A1aA98B35422D8eEA72aC1a761"; // Replace with your actual deployed contract address
       const contractABI = abi.abi; // Use the ABI from the imported JSON file
 
       setConnectionStatus("Checking contract address...");
+      console.log("[DEBUG] Checking contract address:", contractAddress);
+      console.log("[DEBUG] ABI loaded:", contractABI);
 
       // Validate contract address
       if (!contractAddress || contractAddress === "") {
-        console.warn("Contract address not set. Please deploy your contract and update the address.");
+        console.warn("[ERROR] Contract address not set. Please deploy your contract and update the address.");
         setConnectionStatus("❌ Contract address not configured");
         setIsConnecting(false);
+        console.log("[DEBUG] Aborting connection due to missing contract address.");
         return;
       }
 
-      console.log("Using contract address:", contractAddress);
-      console.log("Using contract ABI:", contractABI);
+      console.log("[DEBUG] Using contract address:", contractAddress);
+      console.log("[DEBUG] Using contract ABI:", contractABI);
+      console.log("[DEBUG] Proceeding to wallet/contract connection...");
 
       try {
+        console.log("[DEBUG] Entering main connection try block.");
         const { ethereum } = window;
         if (!ethereum) {
+          console.error("[ERROR] window.ethereum not found. MetaMask not installed.");
           alert("Please install Metamask");
           setConnectionStatus("❌ MetaMask not found");
           setIsConnecting(false);
+          console.log("[DEBUG] Aborting connection due to missing MetaMask.");
           return;
         }
         // Always request accounts to match dapp best practices and test expectations
         let accounts;
+        console.log("[DEBUG] About to request accounts from MetaMask...");
         try {
+          console.log("[DEBUG] Requesting accounts from MetaMask...");
           accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+          console.log("[DEBUG] Accounts received:", accounts);
         } catch (accountError) {
+          console.error("[ERROR] Failed to request accounts:", accountError);
           if (accountError.code === 4001) {
             alert("Failed to connect wallet: User rejected request");
             setConnectionStatus("❌ User rejected connection");
             setIsConnecting(false);
+            console.log("[DEBUG] Aborting connection due to user rejection.");
             return;
           } else if (accountError.message && accountError.message.includes('already pending')) {
             alert("Failed to connect wallet: User rejected request");
             setConnectionStatus("⏳ Connection request already pending");
             setIsConnecting(false);
+            console.log("[DEBUG] Aborting connection due to already pending request.");
             return;
           }
+          console.log("[DEBUG] Throwing accountError to outer catch.");
           throw accountError;
         }
         // Check if user is on the correct network (optional)
+        console.log("[DEBUG] Requesting chainId from MetaMask...");
         const chainId = await ethereum.request({ method: 'eth_chainId' });
         // Log chainId exactly as test expects
         console.log("Current chain ID:", chainId);
@@ -79,53 +96,66 @@ function App() {
         console.log("Connected account:", accounts[0]);
         setWalletAddress(accounts[0]);
         setConnectionStatus("Wallet connected, initializing contract...");
+        console.log("[DEBUG] Wallet address set:", accounts[0]);
+        console.log("[DEBUG] Connection status:", connectionStatus);
 
         let provider, signer, contract;
         try {
+          console.log("[DEBUG] Creating ethers provider and signer...");
           provider = new ethers.BrowserProvider(window.ethereum);
           signer = await provider.getSigner();
+          console.log("[DEBUG] Provider and signer created.");
         } catch (providerError) {
-          console.error("Wallet connection error:", providerError);
+          console.error("[ERROR] Wallet connection error (provider creation):", providerError);
           setConnectionStatus("❌ Connection failed: Provider creation failed");
           setIsConnecting(false);
           alert("Failed to connect wallet: Provider creation failed");
+          console.log("[DEBUG] Aborting connection due to provider creation failure.");
           return;
         }
 
         contract = new ethers.Contract(contractAddress, contractABI, signer);
+        console.log("[DEBUG] Contract instance created.");
 
         // Test contract connection
         try {
           setConnectionStatus("Verifying contract...");
+          console.log("[DEBUG] Verifying contract at address:", contractAddress);
           const contractCode = await provider.getCode(contractAddress);
+          console.log("[DEBUG] Contract code at address:", contractCode);
           if (contractCode === '0x') {
+            console.error("[ERROR] No contract found at the specified address:", contractAddress);
+            alert("No contract found at the specified address. Please check your deployment and network.");
             throw new Error("No contract found at the specified address");
           }
-          console.log("Contract successfully connected");
+          console.log("[DEBUG] Contract successfully connected.");
           setConnectionStatus("✅ Contract connected successfully");
         } catch (contractError) {
-          console.error("Contract connection error:", contractError);
+          console.error("[ERROR] Contract connection error:", contractError);
           setConnectionStatus("❌ Contract verification failed");
           setIsConnecting(false);
           alert("Failed to connect to contract. Please check the contract address and network.");
+          console.log("[DEBUG] Aborting connection due to contract verification failure.");
           return;
         }
 
         setState({ provider, signer, contract });
         setConnectionStatus("✅ Connected successfully");
-        console.log("State updated with contract:", contract);
-        console.log("Full state:", { provider, signer, contract });
+        console.log("[DEBUG] State updated with contract:", contract);
+        console.log("[DEBUG] Full state:", { provider, signer, contract });
 
         // Verify state was set correctly
         setTimeout(() => {
-          console.log("State verification after setState:", state);
+          console.log("[DEBUG] State verification after setState:", state);
         }, 100);
       } catch (error) {
-        console.error("Wallet connection error:", error);
+        console.error("[ERROR] Wallet connection error (outer catch):", error);
         setConnectionStatus("❌ Connection failed: " + (error && error.message ? error.message : error));
         setIsConnecting(false);
+        console.log("[DEBUG] Aborting connection due to outer catch error.");
       } finally {
         setIsConnecting(false);
+        console.log("[DEBUG] Connection attempt finished. isConnecting:", isConnecting);
       }
     };
     
