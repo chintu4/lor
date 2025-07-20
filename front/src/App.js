@@ -31,7 +31,7 @@ function App() {
       setIsConnecting(true);
       setHasTriedConnection(true);
 
-      const contractAddress = "0xC7Ef55966fa060A1aA98B35422D8eEA72aC1a761"; // Replace with your actual deployed contract address
+      const contractAddress = "0x87CD91d9BE41D41341c067359BFf7666f384598E"; // Replace with your actual deployed contract address
       const contractABI = abi.abi; // Use the ABI from the imported JSON file
 
       setConnectionStatus("Checking contract address...");
@@ -163,7 +163,7 @@ function App() {
     if (!isConnecting && !state.contract) {
       connectWallet();
     }
-  },[isConnecting, state.contract]);
+  }, [isConnecting, state.contract, connectionStatus, hasTriedConnection, state]);
   
   // Manual retry function for when connection fails
   const retryConnection = async () => {

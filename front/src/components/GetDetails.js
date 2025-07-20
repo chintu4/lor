@@ -10,14 +10,15 @@ function GetDetails ({state}){
 
 const handleGetDetails = async () => {
   if (!state || !state.contract) {
-    alert("Contract not initialized. Please make sure your wallet is connected and the contract address is set.");
+    alert("Contract not connected");
     return;
   }
   try {
-    const result = await state.contract.getStudentDetails(id);
-    setDetails(result);
-  } catch (error) {
-    console.log(error);
+    const details = await state.contract.getStudentDetails(id);
+    console.log("Here are the Details:", details);
+    setDetails(details); // This will show details in your UI
+  } catch (err) {
+    alert("Error fetching details: " + err.message);
   }
 };
  

@@ -5,7 +5,7 @@ function ApproveLetter ({state}){
   const [id,setId]=useState("");
   
   // Define the allowed account address here
-  const allowedAccount = "0x..."; // Replace with actual allowed account address
+  const allowedAccount = "0xdf46f93b439052a6F7A1aABD595bF8D8d04eE5f2"; // Replace with actual allowed account address
 
   const handleApprove=async()=>{
 

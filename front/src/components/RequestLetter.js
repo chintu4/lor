@@ -115,8 +115,25 @@ const RequestLetter =({state})=>{
       </button> 
       
       {id !== "" && (
-        <div className="recommendation-id">
+        <div className="recommendation-id" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           🎉 Recommendation ID: {id}
+          <button
+            title="Copy ID"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              fontSize: "1.2em"
+            }}
+            onClick={() => {
+              navigator.clipboard.writeText(id);
+              alert("Recommendation ID copied to clipboard!");
+            }}
+            aria-label="Copy Recommendation ID"
+          >
+            📋
+          </button>
         </div>
       )}
     </div>
