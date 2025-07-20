@@ -2,7 +2,7 @@ import {useState} from "react";
 
 function ApproveLetter ({state}){
   
-  const [id,setId]=useState("");
+  const [studentId,setStudentId]=useState("");
   
   // Define the allowed account address here
   const allowedAccount = "0xdf46f93b439052a6F7A1aABD595bF8D8d04eE5f2"; // Replace with actual allowed account address
@@ -16,7 +16,7 @@ if (account !== allowedAccount){
   alert("you are not allowed to approve recommendation")
   return;
 }
-  await state.contract.approveRecommendation(id);
+  await state.contract.approveRecommendation(studentId);
   alert("Recommendation approved successfully!");
 
 }catch(error){
@@ -32,14 +32,14 @@ if (account !== allowedAccount){
       <h2 className="result-title">✅ Approve Letter of Recommendation</h2>
       
       <div className="form-group">
-        <label className="form-label" htmlFor="approve-recommendation-id">Recommendation ID</label>
+        <label className="form-label" htmlFor="approve-student-id">Student ID</label>
         <input 
-          id="approve-recommendation-id"
+          id="approve-student-id"
           type="text" 
           className="form-input"
-          placeholder="Enter recommendation ID to approve" 
-          value={id} 
-          onChange={(e)=>setId(e.target.value)} 
+          placeholder="Enter student ID to approve" 
+          value={studentId} 
+          onChange={(e)=>setStudentId(e.target.value)} 
         />
       </div>
       

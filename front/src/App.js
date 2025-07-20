@@ -31,7 +31,7 @@ function App() {
       setIsConnecting(true);
       setHasTriedConnection(true);
 
-      const contractAddress = "0x87CD91d9BE41D41341c067359BFf7666f384598E"; // Replace with your actual deployed contract address
+      const contractAddress = "0x966DAb139fBeC345CbdDd30BbfE10977149302ab"; // Replace with your actual deployed contract address
       const contractABI = abi.abi; // Use the ABI from the imported JSON file
 
       setConnectionStatus("Checking contract address...");

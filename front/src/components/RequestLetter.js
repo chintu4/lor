@@ -1,121 +1,98 @@
-import {useState} from "react";
 
-const RequestLetter =({state})=>{
-  // For test compliance: show contract connection status
-  const contractStatus = state && state.contract ? 'Connected' : 'Not Connected';
-  const [name,setName] =useState("")
-  const [university,setUniversity] =useState("")
-  const [program,setProgram] =useState("")
-  const [id,setId] =useState("")
-  
+import { useState } from "react";
+
+const RequestLetter = ({ state }) => {
+  // Show contract connection status
+  const contractStatus = state && state.contract ? "Connected" : "Not Connected";
+  const [name, setName] = useState("");
+  const [course, setCourse] = useState("");
+  const [email, setEmail] = useState("");
+  const [id, setId] = useState("");
+
   // Debug state changes
   console.log("RequestLetter component - Current state:", state);
 
-  const handleRequest =async () =>{
-    console.log("handleRequest called with state:", state);
-    
-    // Validate inputs
-    if (!name.trim() || !university.trim() || !program.trim()) {
+  const handleRequest = async () => {
+    if (!name.trim() || !course.trim() || !email.trim()) {
       alert("Please fill in all fields");
       return;
     }
-
-    // Check if state and contract are available
     if (!state || !state.contract) {
-      console.error("Contract not available:", {
-        state: state,
-        hasContract: !!state?.contract,
-        contractValue: state?.contract
-      });
       alert("Contract not initialized. Please make sure your wallet is connected and the contract address is set.");
       return;
     }
-
-    const {contract} = state;
-
-    try{
-      console.log("Requesting recommendation with:", { name, university, program });
-      console.log("Contract:", contract);
-      
-      const transaction = await contract.requestRecommendation(name, university, program);
-      console.log("Transaction sent:", transaction);
-      
-      // Wait for transaction to be mined
-      const receipt = await transaction.wait();
-      console.log("Transaction receipt:", receipt);
-      
-      // Extract the recommendation ID from the transaction receipt
-      // This depends on your smart contract implementation
-      const recommendationId = receipt.logs[0]?.args?.[0] || transaction.hash;
-      setId(recommendationId.toString());
-      
+    const { contract } = state;
+    try {
+      // Add student
+      const txAdd = await contract.addStudent(name, course, email);
+      await txAdd.wait();
+      // Get new studentId (assuming studentCount is a public variable)
+      const studentCount = await contract.studentCount();
+      const studentId = studentCount - 1;
+      // Request recommendation for studentId
+      const txReq = await contract.requestRecommendation(studentId);
+      await txReq.wait();
+      setId(studentId.toString());
       alert("Recommendation requested successfully!");
-    }catch(error){
-      console.error("Detailed error:", error);
-      
-      // Provide more specific error messages
+    } catch (error) {
       if (error.code === 4001) {
         alert("Transaction rejected by user");
       } else if (error.code === -32603) {
         alert("Internal JSON-RPC error. Check your contract address and network.");
-      } else if (error.message.includes("insufficient funds")) {
+      } else if (error.message && error.message.includes("insufficient funds")) {
         alert("Insufficient funds for gas fees");
-      } else if (error.message.includes("execution reverted")) {
+      } else if (error.message && error.message.includes("execution reverted")) {
         alert("Transaction failed: " + (error.reason || "Contract execution reverted"));
       } else {
-        alert("Error Requesting recommendation: " + (error.message || error));
+        alert("Error requesting recommendation: " + (error.message || error));
       }
     }
-  }
-  
+  };
+
   return (
-    <div data-testid="request-letter">
-      RequestLetter Component - Contract:
-      {` ${contractStatus}`}
+    <div className="request-letter-container">
+      <div style={{ marginBottom: "8px" }}>
+        <strong>Contract Status:</strong> {contractStatus}
+      </div>
       <h2 className="result-title">📝 Request Letter of Recommendation</h2>
-      
       <div className="form-group">
         <label className="form-label" htmlFor="student-name-input">Student Name</label>
-        <input 
+        <input
           id="student-name-input"
-          type="text" 
+          type="text"
           className="form-input"
-          placeholder="Enter your full name" 
-          value={name} 
-          onChange={(e)=>setName(e.target.value)} 
+          placeholder="Enter your full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
       </div>
-      
       <div className="form-group">
-        <label className="form-label" htmlFor="university-input">University</label>
-        <input 
-          id="university-input"
-          type="text" 
+        <label className="form-label" htmlFor="course-input">Course</label>
+        <input
+          id="course-input"
+          type="text"
           className="form-input"
-          placeholder="Enter university name" 
-          value={university} 
-          onChange={(e)=>setUniversity(e.target.value)} 
+          placeholder="Enter course name"
+          value={course}
+          onChange={(e) => setCourse(e.target.value)}
         />
       </div>
-      
       <div className="form-group">
-        <label className="form-label" htmlFor="program-input">Program</label>
-        <input 
-          id="program-input"
-          type="text" 
+        <label className="form-label" htmlFor="email-input">Email</label>
+        <input
+          id="email-input"
+          type="email"
           className="form-input"
-          placeholder="Enter program/course name" 
-          value={program} 
-          onChange={(e)=>setProgram(e.target.value)} 
+          placeholder="Enter email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
       </div>
-
       <button className="btn btn-primary" onClick={handleRequest}>
         Request Recommendation
-      </button> 
-      
+      </button>
       {id !== "" && (
-        <div className="recommendation-id" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="recommendation-id" style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px" }}>
           🎉 Recommendation ID: {id}
           <button
             title="Copy ID"
@@ -138,7 +115,6 @@ const RequestLetter =({state})=>{
       )}
     </div>
   );
-}
-
+};
 
 export default RequestLetter;
